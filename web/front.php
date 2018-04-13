@@ -24,20 +24,15 @@ $request = Request::createFromGlobals();
 $routes = include __DIR__.'/../src/app.php';
 
 $context = new Routing\RequestContext();
-$context->fromRequest($request);
+//$context->fromRequest($request);
 $matcher = new Routing\Matcher\UrlMatcher($routes, $context);
 
 $controllerResolver = new HttpKernel\Controller\ControllerResolver();
 $argumentResolver = new HttpKernel\Controller\ArgumentResolver();
 
-/*$routes->add('hello', new Routing\Route('hello/{name}', array(
-    'name' => 'World',
-    '_controller' => 'render_template',
-)));*/
 
-try {
+/*try {
     $request->attributes->add($matcher->match($request->getPathInfo()));
-//    $response = call_user_func($request->attributes->get('_controller'), $request);
 
     $controller = $controllerResolver->getController($request);
     $arguments = $argumentResolver->getArguments($request, $controller);
@@ -47,6 +42,9 @@ try {
     $response = new Response('Not Found', 404);
 } catch (Exception $exception) {
     $response = new Response('An error occured', 500);
-}
+}*/
+
+$framework = new Simplex\Framework($matcher,$controllerResolver, $argumentResolver);
+$response = $framework->handle($request);
 
 $response->send();
