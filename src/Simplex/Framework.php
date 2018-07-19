@@ -7,24 +7,32 @@
  */
 namespace Simplex;
 
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+//use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
+//use Symfony\Component\HttpKernel\Controller\ControllerResolverInterface;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
+use Symfony\Component\HttpKernel\Controller\ControllerResolver;
 use Symfony\Component\HttpKernel\Controller\ControllerResolverInterface;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
+use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
 
 
 class Framework
 {
+    private $dispatcher;
     protected $matcher;
-    protected $controllerResolver;
+    protected $resolver;
     protected $argumentResolver;
 
-    public function __construct(UrlMatcher $matcher, ControllerResolverInterface $controllerResolver, ArgumentResolverInterface $argumentResolver)
+    public function __construct(EventDispatcher $dispatcher, UrlMatcherInterface $matcher, ControllerResolverInterface $controllerResolver, ArgumentResolverInterface $argumentResolver)
     {
+        $this->dispatcher = $dispatcher;
         $this->matcher = $matcher;
-        $this->controllerResolver = $controllerResolver;
+        $this->resolver = $controllerResolver;
         $this->argumentResolver = $argumentResolver;
     }
 
@@ -35,15 +43,22 @@ class Framework
         try {
             $request->attributes->add($this->matcher->match($request->getPathInfo()));
 
-            $controller = $this->controllerResolver->getController($request);
+            $controller = $this->resolver->getController($request);
+//            var_dump($controller);
             $arguments = $this->argumentResolver->getArguments($request, $controller);
 
-            return call_user_func_array($controller, $arguments);
+            $response = call_user_func_array($controller, $arguments);
         } catch (ResourceNotFoundException $exception) {
-            return new Response('Not Found', 404);
+            $response =  new Response('Not Found', 404);
         } catch (\Exception $exception) {
-            return new Response('An error occured', 500);
+//            var_dump($exception);
+            $response = new Response('An error occured', 500);
         }
+
+        // dispatch a response event
+        $this->dispatcher->dispatch('response', new ResponseEvent($response, $request));
+
+        return $response;
     }
 
 }
