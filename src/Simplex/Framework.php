@@ -7,18 +7,8 @@
  */
 namespace Simplex;
 
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel;
-use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
-use Symfony\Component\HttpKernel\Controller\ControllerResolverInterface;
+use Symfony\Component\HttpKernel\HttpKernel;
 
-
-class Framework extends HttpKernel\HttpKernel
+class Framework extends HttpKernel
 {
-    public function __construct($routes)
-    {
-        $requestStack = new RequestStack();
-    }
-
 }
